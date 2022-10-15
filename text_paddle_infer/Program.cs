@@ -26,6 +26,12 @@ namespace text_paddle_infer // Note: actual namespace depends on the project nam
             string input_name = NativeMethods.get_output_names(ptr, ref leng[0]);
             Console.WriteLine(input_name);
             Console.WriteLine(leng[0]);
+            float[] output = new float[102];
+            NativeMethods.read_result_data_F32(ptr, input_name, ref output[0]);
+            for (int i = 0; i < 102; i++) 
+            {
+                Console.WriteLine(output[i]);
+            }
         }
     }
 }

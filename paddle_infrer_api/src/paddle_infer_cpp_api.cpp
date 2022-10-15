@@ -230,7 +230,7 @@ extern "C" __declspec(dllexport) void* __stdcall set_model(void* paddle_infer_pt
     //读取接口输入参数
     std::string model_path = wchar_to_string(model_path_wchar);// 网络结构的文件路径
     std::string params_path = wchar_to_string(params_path_wchar);// 模型参数的文件路径
-    if (model_path == "null") {
+    if (model_path == " ") {
         paddle_infer->config.SetModel(model_path); // 只加载模型参数的文件路径
     }
     else {
@@ -350,12 +350,15 @@ extern "C" __declspec(dllexport) void* __stdcall load_input_image_data(void* pad
     wchar_t* input_name_wchar, uchar* image_data, size_t image_size, int type) {
     PaddleInfer* paddle_infer = (PaddleInfer*)paddle_infer_ptr;
     std::string input_name = wchar_to_string(input_name_wchar);
-    cv::Mat input_image = data_to_mat(image_data, image_size);
+    cv::Mat input_image = data_to_mat(image_data, image_size); // 解码输入图片
+    // 获取输入Tensor
     std::unique_ptr<paddle_infer::Tensor> input_tensor = paddle_infer->predictor->GetInputHandle(input_name);
-    std::vector<int> input_shape = input_tensor->shape();
+    std::vector<int> input_shape = input_tensor->shape(); // 获取输入Tensor形状
+    // 获取输入数据
     std::vector<cv::Mat> input_images;
     input_images.push_back(input_image);
-    std::vector<float> input_datas = input_data_process(input_images, input_shape, type);
+    std::vector<float> input_datas = input_data_process(input_images, input_shape, type); // 处理输入数据
+    // 加载数据
     input_tensor->CopyFromCpu(input_datas.data());
     return (void*)paddle_infer;
 }
@@ -369,14 +372,17 @@ extern "C" __declspec(dllexport) void* __stdcall load_input_data(void* paddle_in
     wchar_t* input_name_wchar, float* data) {
     PaddleInfer* paddle_infer = (PaddleInfer*)paddle_infer_ptr;
     std::string input_name = wchar_to_string(input_name_wchar);
+    // 获取输入Tensor
     std::unique_ptr<paddle_infer::Tensor> input_tensor = paddle_infer->predictor->GetInputHandle(input_name);
-    std::vector<int> input_shape = input_tensor->shape();
+    std::vector<int> input_shape = input_tensor->shape(); // 获取输入Tensor形状
+    // 获取输入长度
     int data_length = std::accumulate(input_shape.begin(), input_shape.end(), 1, std::multiplies<int>());
+    // 构建输入数据
     std::vector<float> input_datas(data_length);
     for (int i = 0; i < data_length; i++) {
         input_datas.push_back(data[i]);
     }
-    input_tensor->CopyFromCpu(input_datas.data());
+    input_tensor->CopyFromCpu(input_datas.data()); // 加载输入数据
     return (void*)paddle_infer;
 }
 
@@ -414,33 +420,46 @@ extern "C" __declspec(dllexport) wchar_t* __stdcall get_output_names(void* paddl
 // @param paddle_infer_ptr PaddleInfer结构体指针
 // @param output_name_wchar 输出节点名
 // @return 输出结果
-extern "C" __declspec(dllexport) float* __stdcall read_result_data_F32(void* paddle_infer_ptr,
-    wchar_t * output_name_wchar) {
+extern "C" __declspec(dllexport) void __stdcall read_result_data_F32(void* paddle_infer_ptr,
+    wchar_t * output_name_wchar, float* infer_result) {
     PaddleInfer* paddle_infer = (PaddleInfer*)paddle_infer_ptr;
     std::string output_name = wchar_to_string(output_name_wchar);
-    std::unique_ptr<paddle_infer::Tensor> output_tensor = paddle_infer->predictor->GetInputHandle(output_name);
-    std::vector<int> output_shape = output_tensor->shape();
-    int data_length = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int>());
-    float* result = new float(data_length);
-    output_tensor->CopyFromCpu(result);
-    return result;
+    // 获取输出节点句柄
+    std::unique_ptr<paddle_infer::Tensor> output_tensor = paddle_infer->predictor->GetOutputHandle(output_name);
+    //std::vector<int> output_shape = output_tensor->shape();
+    //int data_length = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int>());
+    output_tensor->CopyToCpu(infer_result); // 读取结果
 }
 
 // @brief 读取模型结果输出-I32
 // @param paddle_infer_ptr PaddleInfer结构体指针
 // @param output_name_wchar 输出节点名
 // @return 输出结果
-extern "C" __declspec(dllexport) int* __stdcall read_result_data_I32(void* paddle_infer_ptr,
-    wchar_t* output_name_wchar) {
+extern "C" __declspec(dllexport) void __stdcall read_result_data_I32(void* paddle_infer_ptr,
+    wchar_t* output_name_wchar, int* infer_result) {
     PaddleInfer* paddle_infer = (PaddleInfer*)paddle_infer_ptr;
     std::string output_name = wchar_to_string(output_name_wchar);
-    std::unique_ptr<paddle_infer::Tensor> output_tensor = paddle_infer->predictor->GetInputHandle(output_name);
-    std::vector<int> output_shape = output_tensor->shape();
-    int data_length = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int>());
-    int* result = new int(data_length);
-    output_tensor->CopyFromCpu(result);
-    return result;
+    // 获取输出节点句柄
+    std::unique_ptr<paddle_infer::Tensor> output_tensor = paddle_infer->predictor->GetOutputHandle(output_name);
+    //std::vector<int> output_shape = output_tensor->shape();
+    //int data_length = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int>());
+    output_tensor->CopyToCpu(infer_result); // 读取结果
 }
+// @brief 读取模型结果输出-I64
+// @param paddle_infer_ptr PaddleInfer结构体指针
+// @param output_name_wchar 输出节点名
+// @return 输出结果
+extern "C" __declspec(dllexport) void __stdcall read_result_data_I64(void* paddle_infer_ptr,
+    wchar_t* output_name_wchar, long long* infer_result) {
+    PaddleInfer* paddle_infer = (PaddleInfer*)paddle_infer_ptr;
+    std::string output_name = wchar_to_string(output_name_wchar);
+    // 获取输出节点句柄
+    std::unique_ptr<paddle_infer::Tensor> output_tensor = paddle_infer->predictor->GetOutputHandle(output_name);
+    //std::vector<int> output_shape = output_tensor->shape();
+    //int data_length = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int>());
+    output_tensor->CopyToCpu(infer_result); // 读取结果
+}
+
 
 
 // @brief 销毁内存

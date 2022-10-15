@@ -29,15 +29,17 @@ namespace PaddleInferenceSharp
         [DllImport(paddle_infer_path, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr load_input_image_data(IntPtr paddle_infer, string input_name, ref byte image_data, ulong image_size, int type);
         [DllImport(paddle_infer_path, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr load_input_data(IntPtr paddle_infer, string input_name, float[] data);
+        public static extern IntPtr load_input_data(IntPtr paddle_infer, string input_name, ref float data);
         [DllImport(paddle_infer_path, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr infer(IntPtr paddle_infer);
         [DllImport(paddle_infer_path, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         public static extern string get_output_names(IntPtr paddle_infer, ref int length);
         [DllImport(paddle_infer_path, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
-        public static extern float[] read_result_data_F32(IntPtr paddle_infer, string output_name);
+        public static extern void read_result_data_F32(IntPtr paddle_infer, string output_name, ref float result);
         [DllImport(paddle_infer_path, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int[] read_result_data_I32(IntPtr paddle_infer, string output_name);
+        public static extern void read_result_data_I32(IntPtr paddle_infer, string output_name, ref int result);
+        [DllImport(paddle_infer_path, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void read_result_data_I64(IntPtr paddle_infer, string output_name, ref long result);
         [DllImport(paddle_infer_path, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         public static extern void dispose(IntPtr paddle_infer);
            
