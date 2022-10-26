@@ -77,7 +77,11 @@ std::vector<float> input_data_process(std::vector<cv::Mat> input_image, std::vec
     int height = shape[2]; // 要求输入图片数据的高度
     int channels = shape[1]; // 要求输入图片数据的维度
     int bath_size = shape[0]; // 要求输入的bath_size
-    std::vector<float> input_data(bath_size * channels * height * width);
+    std::cout << "width  " << width << std::endl;
+    std::cout << "height  " << height << std::endl;
+    std::cout << "channels  " << channels << std::endl;
+    std::cout << "bath_size  " << bath_size << std::endl;
+    std::vector<float> input_data(bath_size * channels * height * width,1);
     for (int b = 0; b < bath_size; b++) {
         cv::Mat blob_image;
         cv::cvtColor(input_image[b], blob_image, cv::COLOR_BGR2RGB); // 将图片通道由 BGR 转为 RGB
@@ -101,21 +105,7 @@ std::vector<float> input_data_process(std::vector<cv::Mat> input_image, std::vec
             // 对输入图片按照tensor输入要求进行缩放
             cv::resize(blob_image, blob_image, cv::Size(width, height), 0, 0, cv::INTER_LINEAR);
             // 图像数据归一化
-            std::vector<float> mean_values{ 0.5 * 255, 0.5 * 255, 0.5 * 255 };
-            std::vector<float> std_values{ 0.5 * 255, 0.5 * 255, 0.5 * 255 };
-            std::vector<cv::Mat> rgb_channels(3);
-            cv::split(blob_image, rgb_channels); // 分离图片数据通道
-            for (auto i = 0; i < rgb_channels.size(); i++) {
-                //分通道依此对每一个通道数据进行归一化处理
-                rgb_channels[i].convertTo(rgb_channels[i], CV_32FC1, 1.0 / std_values[i], (0.0 - mean_values[i]) / std_values[i]);
-            }
-            cv::merge(rgb_channels, blob_image); // 合并图片数据通道
-        }
-        else if (type == 2) {
-            // 对输入图片按照tensor输入要求进行缩放
-            cv::resize(blob_image, blob_image, cv::Size(width, height), 0, 0, cv::INTER_LINEAR);
-            // 图像数据归一化
-            std::vector<float> std_values{ 0.5 * 255, 0.5 * 255, 0.5 * 255 };
+            std::vector<float> std_values{ 255.0,  255.0,  255.0 };
             std::vector<cv::Mat> rgb_channels(3);
             cv::split(blob_image, rgb_channels); // 分离图片数据通道
             for (auto i = 0; i < rgb_channels.size(); i++) {
@@ -124,7 +114,7 @@ std::vector<float> input_data_process(std::vector<cv::Mat> input_image, std::vec
             }
             cv::merge(rgb_channels, blob_image); // 合并图片数据通道
         }
-        else if (type == 3) {
+        else if (type == 2) {
             // 获取仿射变换信息
             cv::Point center(blob_image.cols / 2, blob_image.rows / 2); // 变换中心
             cv::Size input_size(blob_image.cols, blob_image.rows); // 输入尺寸
@@ -317,7 +307,7 @@ extern "C" __declspec(dllexport) wchar_t* __stdcall get_input_names(void* paddle
     // 将节点转为可以传递的格式
     std::string out_str;
     for (int i = 0; i < input_names.size(); i++) {
-        out_str = input_names[i];
+        out_str += input_names[i];
         length[i] = input_names[i].length();
     }
     return string_to_wchar(out_str);
@@ -378,7 +368,7 @@ extern "C" __declspec(dllexport) void* __stdcall load_input_data(void* paddle_in
     // 获取输入长度
     int data_length = std::accumulate(input_shape.begin(), input_shape.end(), 1, std::multiplies<int>());
     // 构建输入数据
-    std::vector<float> input_datas(data_length);
+    std::vector<float> input_datas(data_length,1);
     for (int i = 0; i < data_length; i++) {
         input_datas.push_back(data[i]);
     }
@@ -409,12 +399,30 @@ extern "C" __declspec(dllexport) wchar_t* __stdcall get_output_names(void* paddl
     // 将节点转为可以传递的格式
     std::string out_str;
     for (int i = 0; i < input_names.size(); i++) {
-        out_str = input_names[i];
+        out_str += input_names[i];
         length[i] = input_names[i].length();
     }
     return string_to_wchar(out_str);
 }
 
+// @brief 获取指定节点的形状
+// @param paddle_infer_ptr PaddleInfer结构体指针
+// @param node_name_wchar 节点名
+// @param shape 形状
+// @param dimension 维度
+// @return 输出结果
+extern "C" __declspec(dllexport) void __stdcall get_node_shape(void* paddle_infer_ptr,
+    wchar_t* node_name_wchar, int* shape, int* dimension) {
+    PaddleInfer* paddle_infer = (PaddleInfer*)paddle_infer_ptr;
+    std::string name = wchar_to_string(node_name_wchar);
+    std::unique_ptr<paddle_infer::Tensor> tensor = paddle_infer->predictor->GetOutputHandle(name);
+    std::vector<int> shapes = tensor->shape();
+    for (int i = 0; i < shapes.size(); i++) {
+        *shape = shapes[i];
+        shape++;
+    }
+    *dimension = shapes.size();
+}
 
 // @brief 读取模型结果输出-F32
 // @param paddle_infer_ptr PaddleInfer结构体指针
@@ -426,9 +434,14 @@ extern "C" __declspec(dllexport) void __stdcall read_result_data_F32(void* paddl
     std::string output_name = wchar_to_string(output_name_wchar);
     // 获取输出节点句柄
     std::unique_ptr<paddle_infer::Tensor> output_tensor = paddle_infer->predictor->GetOutputHandle(output_name);
-    //std::vector<int> output_shape = output_tensor->shape();
-    //int data_length = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int>());
-    output_tensor->CopyToCpu(infer_result); // 读取结果
+    std::vector<int> output_shape = output_tensor->shape();
+    int data_length = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int>());
+    std::vector<float> result(data_length);
+    output_tensor->CopyToCpu(result.data()); // 读取结果
+    for (int i = 0; i < data_length; i++) {
+        *infer_result = result[i];
+        infer_result++;
+    }
 }
 
 // @brief 读取模型结果输出-I32
@@ -441,9 +454,14 @@ extern "C" __declspec(dllexport) void __stdcall read_result_data_I32(void* paddl
     std::string output_name = wchar_to_string(output_name_wchar);
     // 获取输出节点句柄
     std::unique_ptr<paddle_infer::Tensor> output_tensor = paddle_infer->predictor->GetOutputHandle(output_name);
-    //std::vector<int> output_shape = output_tensor->shape();
-    //int data_length = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int>());
-    output_tensor->CopyToCpu(infer_result); // 读取结果
+    std::vector<int> output_shape = output_tensor->shape();
+    int data_length = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int>());
+    std::vector<int> result(data_length);
+    output_tensor->CopyToCpu(result.data()); // 读取结果
+    for (int i = 0; i < data_length; i++) {
+        *infer_result = result[i];
+        infer_result++;
+    }
 }
 // @brief 读取模型结果输出-I64
 // @param paddle_infer_ptr PaddleInfer结构体指针
@@ -455,9 +473,14 @@ extern "C" __declspec(dllexport) void __stdcall read_result_data_I64(void* paddl
     std::string output_name = wchar_to_string(output_name_wchar);
     // 获取输出节点句柄
     std::unique_ptr<paddle_infer::Tensor> output_tensor = paddle_infer->predictor->GetOutputHandle(output_name);
-    //std::vector<int> output_shape = output_tensor->shape();
-    //int data_length = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int>());
-    output_tensor->CopyToCpu(infer_result); // 读取结果
+    std::vector<int> output_shape = output_tensor->shape();
+    int data_length = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int>());
+    std::vector<long long> result(data_length);
+    output_tensor->CopyToCpu(result.data()); // 读取结果
+    for (int i = 0; i < data_length; i++) {
+        *infer_result = result[i];
+        infer_result++;
+    }
 }
 
 
