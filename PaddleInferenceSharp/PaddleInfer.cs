@@ -30,8 +30,8 @@ namespace PaddleInferenceSharp
         /// </summary>
         /// <param name="divice">设备选择</param>
         /// <param name="num">对于CPU、ONNX runtime代表线程数，默认为10；对于GPU代表显卡编号，默认为0；对于oneDNN代表cache数量，默认为1</param>
-        /// <param name="memory_init_size">显存分配空间</param>
-        /// <param name="workspace_size">显存工作空间</param>
+        /// <param name="memory_init_size">显存分配空间(尽在使用GPU时作用)</param>
+        /// <param name="workspace_size">显存工作空间(尽在使用GPU时作用)</param>
         public void set_divice(Divice divice, int num = 0, ulong memory_init_size = 500, int workspace_size = 30)
         {
             if (divice == Divice.CPU)
@@ -78,13 +78,17 @@ namespace PaddleInferenceSharp
                 string str = input.Substring(l, length[i]);
                 input_name.Add(str);
                 l += length[i];
+                if (l >= input.Length) 
+                {
+                    break;
+                }
             }
             return input_name;
         }
         /// <summary>
         /// 设置输入节点形状
         /// </summary>
-        /// <param name="input_shape">形状</param>
+        /// <param name="input_shape">形状数组</param>
         /// <param name="input_name">节点名称</param>
         public void set_input_shape(int[] input_shape, string input_name) 
         {
@@ -94,8 +98,8 @@ namespace PaddleInferenceSharp
         /// <summary>
         /// 加载普通数据
         /// </summary>
-        /// <param name="input_name"></param>
-        /// <param name="input_data"></param>
+        /// <param name="input_name">输入节点名称</param>
+        /// <param name="input_data">输入数据</param>
         public void load_input_data(string input_name, float[] input_data)
         {
             paddle_infer = NativeMethods.load_input_data(paddle_infer, input_name, ref input_data[0]);
@@ -111,7 +115,9 @@ namespace PaddleInferenceSharp
         {
             paddle_infer = NativeMethods.load_input_image_data(paddle_infer, input_name, ref image_data[0], image_size, type);
         }
-
+        /// <summary>
+        /// 模型推理
+        /// </summary>
         public void infer()
         {
             paddle_infer = NativeMethods.infer(paddle_infer);
@@ -131,8 +137,29 @@ namespace PaddleInferenceSharp
                 string str = output.Substring(l, length[i]);
                 output_name.Add(str);
                 l += length[i];
+                if (l >= output.Length)
+                {
+                    break;
+                }
             }
             return output_name;
+        }
+        /// <summary>
+        /// 获取指定节点形状
+        /// </summary>
+        /// <param name="node_name">节点名称</param>
+        /// <returns></returns>
+        public List<int> get_shape(string node_name) 
+        {
+            int[] shape = new int[5];
+            int dimension = 0;
+            List<int> shape_out = new List<int>();
+            NativeMethods.get_node_shape(paddle_infer, node_name, ref shape[0], ref dimension);
+            for (int i = 0; i < dimension; i++) 
+            {
+                shape_out.Add(shape[i]);
+            }
+            return shape_out;
         }
 
         /// <summary>
@@ -170,7 +197,9 @@ namespace PaddleInferenceSharp
                 return result;
             }
         }
-
+        /// <summary>
+        /// 删除内存地址
+        /// </summary>
         public void delet()
         {
             NativeMethods.dispose(paddle_infer);

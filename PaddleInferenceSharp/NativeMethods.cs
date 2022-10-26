@@ -35,6 +35,8 @@ namespace PaddleInferenceSharp
         [DllImport(paddle_infer_path, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         public static extern string get_output_names(IntPtr paddle_infer, ref int length);
         [DllImport(paddle_infer_path, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void get_node_shape(IntPtr paddle_infer_ptr, string node_name, ref int shape, ref int dimension);
+        [DllImport(paddle_infer_path, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         public static extern void read_result_data_F32(IntPtr paddle_infer, string output_name, ref float result);
         [DllImport(paddle_infer_path, CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         public static extern void read_result_data_I32(IntPtr paddle_infer, string output_name, ref int result);
