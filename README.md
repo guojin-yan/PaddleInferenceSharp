@@ -18,6 +18,8 @@
 
 ## 2.1 API 方法
 
+
+
 <table>
 	<tr>
 	    <th width="7%" align="center" bgcolor=#FF7A68>序号</th>
@@ -199,4 +201,3 @@
         <td align="center">oneDNN</td>
         <td>使用oneDNN推理</td>
 	</tr>
-
