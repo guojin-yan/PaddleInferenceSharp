@@ -1,22 +1,22 @@
 # 基于C#和Paddle Inference 部署PaddlePaddle模型——PaddleInferenceSharp
 
-![paddle名称.drawio](E:\Git_space\PaddleInferenceSharp\doc\image\paddle名称.drawio.png)
+![paddle名称.drawio](./doc/image/paddle名称.drawio.png)
 
 # 1. 项目介绍
 
-&emsp;Paddle Inference 是飞桨的原生推理库， 提供服务器端的高性能推理能力，直接基于飞桨的训练算子，因此它支持飞桨训练出的所有模型的推理；Paddle Inference 功能特性丰富，性能优异，针对不同平台不同的应用场景进行了深度的适配优化，做到高吞吐、低时延，保证了飞桨模型在服务器端即训即用，快速部署。
+&emsp; Paddle Inference 是飞桨的原生推理库， 提供服务器端的高性能推理能力，直接基于飞桨的训练算子，因此它支持飞桨训练出的所有模型的推理；Paddle Inference 功能特性丰富，性能优异，针对不同平台不同的应用场景进行了深度的适配优化，做到高吞吐、低时延，保证了飞桨模型在服务器端即训即用，快速部署。
 
-&emsp; 但由于Paddle Inference目前只提供了Python、C++、C、Go语言方法接口，C#无法直接使用。近几年以来 ，C#语言快速发展，并跻身于编程语言排行榜前几名的位置，为了能够在C#语言中调用
+&emsp; 但由于Paddle Inference目前只提供了Python、C++、C、Go语言方法接口，C#无法直接使用。近几年以来 ，C#语言快速发展，并跻身于编程语言排行榜前几名的位置，为了能够在C#语言中调用Paddle Inference模型推理库，根据C++动态链接库的原理，推出PaddleInferenceSharp。
 
-![paddleinferencesharp.drawio](E:\Git_space\PaddleInferenceSharp\doc\image\paddleinferencesharp.drawio.png)
-
-
+![paddleinferencesharp.drawio](./doc/image/paddleinferencesharp.drawio.png)
 
 
 
-# PaddleInfer API 方法介绍
 
 
+# 2. PaddleInfer类 
+
+## 2.1 API 方法
 
 <table>
 	<tr>
@@ -172,4 +172,31 @@
 	</tr>
 
 
+## 2.2 枚举
+
+<table>
+	<tr>
+	    <th width="10%" align="center" bgcolor=#FF7A68>序号</th>
+	    <th width="20%"  align="center" bgcolor=#FF7A68>枚举名</th>
+	    <th width="30%" align="center" bgcolor=#FF7A68>枚举变量</th>  
+        <th width="40%" align="center" bgcolor=#FF7A68>含义</th>
+	</tr >
+	<tr >
+	    <td rowspan="4" align="center">1</td>
+        <td rowspan="4" align="center">Divice<br>设备名称</br></td>
+        <td align="center">CPU</td>
+        <td>使用CPU推理</td>
+	</tr>
+	<tr >
+        <td align="center">GPU</td>
+        <td>使用GPU推理</td>
+	</tr>
+	<tr >
+        <td align="center">ONNX_runtime</td>
+        <td>使用ONNX_runtime推理</td>
+	</tr>
+	<tr >
+        <td align="center">oneDNN</td>
+        <td>使用oneDNN推理</td>
+	</tr>
 
