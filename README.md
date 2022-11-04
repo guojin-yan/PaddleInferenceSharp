@@ -6,17 +6,46 @@
 
 &emsp; Paddle Inference 是飞桨的原生推理库， 提供服务器端的高性能推理能力，直接基于飞桨的训练算子，因此它支持飞桨训练出的所有模型的推理；Paddle Inference 功能特性丰富，性能优异，针对不同平台不同的应用场景进行了深度的适配优化，做到高吞吐、低时延，保证了飞桨模型在服务器端即训即用，快速部署。
 
-&emsp; 但由于Paddle Inference目前只提供了Python、C++、C、Go语言方法接口，C#无法直接使用。近几年以来 ，C#语言快速发展，并跻身于编程语言排行榜前几名的位置，为了能够在C#语言中调用Paddle Inference模型推理库，根据C++动态链接库的原理，推出PaddleInferenceSharp。
+&emsp; 但由于Paddle Inference目前只提供了Python、C++、C、Go语言方法接口，C#无法直接使用。近几年以来 ，C#语言快速发展，并跻身于编程语言排行榜前几名的位置，为了能够在C#语言中调用Paddle Inference模型推理库，根据C++动态链接库的原理，推出PaddleInferenceSharp，实现直接在C#平台调用Paddle Inference部署深度学习模型。其实现原理可以参考下图：
 
 ![paddleinferencesharp.drawio](./doc/image/paddleinferencesharp.drawio.png)
 
 
 
+# 2.项目环境配置
+
+&emsp;为了防止复现代码出现问题，列出以下代码开发环境，可以根据自己需求设置。
+
+-  操作系统：Windows 11
+-  CUDA：11.4
+-  cuDNN：8.2.4
+-  TensorRT：8.4.0.6
+-  OpenCV：4.5.5
+-  Visual Studio：2022
+-  C#框架：.NET 6.0
+-  OpenCvSharp：OpenCvSharp4
+
+&emsp;此处最重要的是需要安装Paddle Inference C++版，具体安装方式可以参考下面的连接：[Paddle Inference C++ 依赖库安装(Windows)](https://blog.csdn.net/grape_yan/article/details/127322648?spm=1001.2014.3001.5501)。对于其他依赖项安装可以参考以下链接：[NVIDIA TensorR 安装 (Windows C++)](https://blog.csdn.net/grape_yan/article/details/127320959?spm=1001.2014.3001.5501)、[OpenCV C++安装和配置](https://blog.csdn.net/grape_yan/article/details/126954261?spm=1001.2014.3001.5501)。
+
+# 3.项目下载方式
+
+&emsp;项目所使用的源码均已经在Github和Gitee上开源，
+
+```shell
+Github:
+
+git clone https://github.com/guojin-yan/PaddleInferenceSharp.git
+
+Gitee:
+
+git clone https://gitee.com/guojin-yan/PaddleInferenceSharp.git
+```
 
 
-# 2. PaddleInfer类 
 
-## 2.1 API 方法
+# 4. PaddleInfer类 
+
+## 4.1 API 方法
 
 
 
@@ -174,7 +203,7 @@
 	</tr>
 
 
-## 2.2 枚举
+## 4.2 枚举
 
 <table>
 	<tr>
@@ -201,3 +230,5 @@
         <td align="center">oneDNN</td>
         <td>使用oneDNN推理</td>
 	</tr>
+
+&emsp;关于上述方法的使用，后续会更新县官的案例教程以及详细的技术文档，敬请期待。
