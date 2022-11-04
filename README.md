@@ -47,8 +47,6 @@ git clone https://gitee.com/guojin-yan/PaddleInferenceSharp.git
 
 ## 4.1 API 方法
 
-
-
 <table>
 	<tr>
 	    <th width="7%" align="center" bgcolor=#FF7A68>序号</th>
@@ -201,6 +199,8 @@ git clone https://gitee.com/guojin-yan/PaddleInferenceSharp.git
         <td>删除内存地址</td>
         <td rowspan="1"></td>
 	</tr>
+
+
 
 
 ## 4.2 枚举
